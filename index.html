@@ -14,7 +14,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <h2>Momentum Digital</h2>
+                <img src="media/MD.png" alt="Momentum Digital" class="logo-img">
             </div>
             <ul class="nav-menu">
                 <li><a href="#home">Home</a></li>
@@ -58,6 +58,10 @@
                 <div class="hero-cta">
                     <a href="#contact" class="btn-primary large">Book Quick No-Obligation Call</a>
                     <a href="#services" class="btn-secondary">See How We Guarantee Growth</a>
+                    <button id="vapi-call-btn" class="btn-vapi">
+                        <i class="fas fa-phone"></i>
+                        Talk to AI Receptionist
+                    </button>
                 </div>
             </div>
             <div class="hero-image">
@@ -425,5 +429,53 @@
     </footer>
 
     <script src="script.js"></script>
+    
+    <!-- VAPI Assistant Widget -->
+    <script>
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dynamically load VAPI web SDK
+            const script = document.createElement('script');
+            script.src = 'https://cdn.vapi.ai/sdk/v1/web.js';
+            script.onload = function() {
+                try {
+                    // Initialize VAPI with your credentials
+                    window.vapi = new Vapi({
+                        publicKey: '0368c2f0-2d53-4987-989a-c5c10b085a42',
+                        assistantId: '438b7b10-80ee-4fd9-a287-d0a56929b9e8',
+                        metadata: {
+                            source: 'website',
+                            page: window.location.pathname
+                        }
+                    });
+                    
+                    // Add click event to VAPI button
+                    const vapiButton = document.getElementById('vapi-call-btn');
+                    if (vapiButton) {
+                        vapiButton.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            console.log('VAPI button clicked, starting call...');
+                            window.vapi.startCall();
+                        });
+                        
+                        // Enable the button
+                        vapiButton.disabled = false;
+                        vapiButton.style.opacity = '1';
+                        console.log('VAPI button initialized successfully');
+                    } else {
+                        console.error('VAPI button not found');
+                    }
+                } catch (error) {
+                    console.error('VAPI initialization error:', error);
+                }
+            };
+            
+            script.onerror = function() {
+                console.error('Failed to load VAPI SDK');
+            };
+            
+            document.head.appendChild(script);
+        });
+    </script>
 </body>
 </html>
