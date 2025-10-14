@@ -398,62 +398,71 @@
 
     <script src="script.js"></script>
 
-    <!-- VAPI Voice Assistant Integration -->
+    <!-- VAPI: single init + navbar button -->
     <script>
-      (function () {
-        const BUTTON_ID = "vapi-call-btn";
-        
-        fetch('/api/vapi-config')
-          .then(response => {
-            if (!response.ok) throw new Error('Failed to fetch VAPI configuration');
-            return response.json();
-          })
-          .then(config => {
-            const g = document.createElement("script");
-            g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-            g.defer = true; g.async = true;
-            g.onload = function () {
-              if (!window.vapiSDK?.run) return console.error("VAPI script loaded but vapiSDK.run missing");
-              const vapi = window.vapiSDK.run({
-                apiKey: config.publicKey,
-                assistant: config.assistantId,
-                config: { position: "hidden" } // Hide the default widget
-              });
-              
-              const btn = document.getElementById(BUTTON_ID);
-              if (!btn) return console.error("#" + BUTTON_ID + " not found");
-              btn.disabled = false; btn.style.opacity = "1";
-              
-              btn.addEventListener("click", async (e) => {
-                e.preventDefault();
-                try { 
-                  await vapi.start?.(); 
-                } catch (err) { 
-                  console.error("VAPI start failed:", err);
-                  alert("AI Assistant temporarily unavailable. Please try again later.");
-                }
-              });
-              
-              // Event listeners
-              vapi.on?.("error", (e) => console.error("VAPI error", e));
-              vapi.on?.("call.started", (e) => console.log("VAPI call started", e));
-              vapi.on?.("call.ended", (e) => console.log("VAPI call ended", e));
+    (function () {
+      const NAV_BTN_ID = "vapi-call-btn";
+      const navBtn = document.getElementById(NAV_BTN_ID);
+      if (navBtn) { navBtn.disabled = true; navBtn.style.opacity = "0.6"; }
+
+      fetch("/api/vapi-config")
+        .then(r => { if (!r.ok) throw new Error("config fetch failed"); return r.json(); })
+        .then(cfg => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+          s.async = true; s.defer = true;
+
+          s.onload = () => {
+            if (!window.vapiSDK?.run) return console.error("VAPI SDK missing");
+            // Init once (let it mount, then we'll hide the floating widget)
+            const vapi = window.vapiSDK.run({
+              apiKey: cfg.publicKey,
+              assistant: cfg.assistantId,
+              config: { position: "bottom-left", draggable: false }
+            });
+
+            // Hide the default floating widget so we can use our navbar button
+            const hideWidget = () => {
+              const root =
+                document.querySelector('iframe[src*="vapi"]')?.parentElement ||
+                document.querySelector("[data-vapi-root]");
+              if (root) root.style.display = "none";
             };
-            g.onerror = function () { console.error("Failed to load VAPI script-tag bundle"); };
-            document.head.appendChild(g);
-          })
-          .catch(error => {
-            console.error("Error loading VAPI configuration:", error);
-            const btn = document.getElementById(BUTTON_ID);
-            if (btn) {
-              btn.disabled = false; btn.style.opacity = "1";
-              btn.addEventListener("click", function(e) {
-                e.preventDefault();
-                alert("AI Assistant temporarily unavailable. Please try again later.");
-              });
-            }
-          });
-      })();
+            setTimeout(hideWidget, 500);
+            new MutationObserver(hideWidget).observe(document.body, { childList: true, subtree: true });
+
+            vapi.on?.("ready", () => {
+              if (navBtn) { navBtn.disabled = false; navBtn.style.opacity = "1"; }
+            });
+
+            navBtn?.addEventListener("click", async (e) => {
+              e.preventDefault();
+              try { await vapi.start?.(); }
+              catch (err) {
+                console.error("VAPI start failed:", err);
+                alert("AI Assistant temporarily unavailable. Please try again.");
+              }
+            });
+
+            vapi.on?.("error", (e) => console.error("VAPI error", e));
+            vapi.on?.("call.started", () => console.log("VAPI call started"));
+            vapi.on?.("call.ended", () => console.log("VAPI call ended"));
+          };
+
+          s.onerror = () => console.error("Failed to load VAPI SDK");
+          document.head.appendChild(s);
+        })
+        .catch(err => {
+          console.error("Error loading VAPI configuration:", err);
+          if (navBtn) {
+            navBtn.disabled = false; navBtn.style.opacity = "1";
+            navBtn.addEventListener("click", (e) => {
+              e.preventDefault();
+              alert("AI Assistant temporarily unavailable. Please try again later.");
+            });
+          }
+        });
+    })();
     </script>
 </body>
 </html>

@@ -149,6 +149,18 @@ p {
     font-size: 0.85rem;
 }
 
+/* Ensure navbar VAPI button is clickable above overlays */
+.nav-cta .nav-vapi { 
+    pointer-events: auto; 
+    position: relative; 
+    z-index: 1000; 
+}
+
+/* If there is a full-width header overlay, make sure it does NOT block clicks: */
+.nav-overlay { 
+    pointer-events: none; 
+}
+
 /* VAPI Button Responsive Styles */
 @media (max-width: 768px) {
     .btn-vapi {
