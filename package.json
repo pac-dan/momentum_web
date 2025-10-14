@@ -1,0 +1,31 @@
+{
+  "name": "momentum-digital-website",
+  "version": "1.0.0",
+  "description": "Momentum Digital - Your Digital Growth Partner Website",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Static site - no build required'"
+  },
+  "keywords": [
+    "digital-marketing",
+    "business-growth",
+    "website",
+    "marketing-agency"
+  ],
+  "author": "Kevin Johnson Horgan",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/momentum-digital-website.git"
+  },
+  "homepage": "https://yourusername.github.io/momentum-digital-website"
+}
