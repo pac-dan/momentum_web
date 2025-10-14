@@ -32,12 +32,6 @@
         </div>
     </nav>
 
-    <!-- Sticky VAPI Button -->
-    <button id="vapi-call-btn" class="btn-vapi sticky-vapi">
-        <i class="fas fa-phone"></i>
-        Talk to Our AI Receptionist
-    </button>
-
     <!-- Hero Section -->
     <section id="home" class="hero">
         <div class="hero-container">
@@ -400,10 +394,9 @@
 
     <script src="script.js"></script>
 
-    <!-- VAPI Voice Assistant Integration (unchanged) -->
+    <!-- VAPI Voice Assistant Integration -->
     <script>
       (function () {
-        const BUTTON_ID = "vapi-call-btn";
         fetch('/api/vapi-config')
           .then(response => {
             if (!response.ok) throw new Error('Failed to fetch VAPI configuration');
@@ -420,13 +413,8 @@
                 assistant: config.assistantId,
                 config: { position: "bottom-right", offset: "32px", width: "56px", height: "56px" }
               });
-              const btn = document.getElementById(BUTTON_ID);
-              if (!btn) return console.error("#" + BUTTON_ID + " not found");
-              btn.disabled = false; btn.style.opacity = "1";
-              btn.addEventListener("click", async (e) => {
-                e.preventDefault();
-                try { await vapi.start?.(); } catch (err) { console.error("VAPI start failed:", err); }
-              });
+              
+              // Event listeners
               vapi.on?.("error", (e) => console.error("VAPI error", e));
               vapi.on?.("call.started", (e) => console.log("VAPI call started", e));
               vapi.on?.("call.ended", (e) => console.log("VAPI call ended", e));
@@ -436,14 +424,6 @@
           })
           .catch(error => {
             console.error("Error loading VAPI configuration:", error);
-            const btn = document.getElementById(BUTTON_ID);
-            if (btn) {
-              btn.disabled = false; btn.style.opacity = "1";
-              btn.addEventListener("click", function(e) {
-                e.preventDefault();
-                alert("VAPI service temporarily unavailable. Please try again later.");
-              });
-            }
           });
       })();
     </script>
