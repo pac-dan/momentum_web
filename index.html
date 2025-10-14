@@ -430,25 +430,51 @@
 
     <script src="script.js"></script>
     
-    <!-- VAPI Assistant Widget -->
+    <!-- VAPI Voice Assistant Integration -->
     <script>
-        (function(v, a, p, i) {
-            v['VapiAssistant'] = i;
-            v[i] = v[i] || function() {
-                (v[i].q = v[i].q || []).push(arguments);
-            };
-            var s = a.createElement('script');
-            s.async = true;
-            s.src = p;
-            var x = a.getElementsByTagName('script')[0];
-            x.parentNode.insertBefore(s, x);
-        })(window, document, 'https://cdn.vapi.ai/vapi-assistant.js', 'vapi');
+      (function () {
+        const PUBLIC_KEY   = "d560bfb4-8869-430b-af02-02700aad6cd2";
+        const ASSISTANT_ID = "438b7b10-80ee-4fd9-a287-d0a56929b9e8";
+        const BUTTON_ID    = "vapi-call-btn";
 
-        vapi('init', {
-            assistantId: '438b7b10-80ee-4fd9-a287-d0a56929b9e8',
-            publicKey: '0368c2f0-2d53-4987-989a-c5c10b085a42',
-            triggerButton: '#vapi-call-btn'
-        });
+        const s = document.createElement("script");
+        s.src = "https://cdn.vapi.ai/sdk/v1/web.js";
+        s.async = true;
+        s.onload = function () {
+          try {
+            if (!window.Vapi || !window.Vapi.init) {
+              console.error("VAPI SDK loaded but init not found");
+              return;
+            }
+
+            const vapi = window.Vapi.init({ publicKey: PUBLIC_KEY });
+
+            const btn = document.getElementById(BUTTON_ID);
+            if (!btn) {
+              console.error(`#${BUTTON_ID} not found`);
+              return;
+            }
+            btn.disabled = false;
+            btn.style.opacity = "1";
+
+            btn.addEventListener("click", function (e) {
+              e.preventDefault();
+              vapi.start({
+                assistantId: ASSISTANT_ID,
+                metadata: { source: "website", pageUrl: window.location.href }
+              });
+            });
+
+            vapi.on?.("call.started", e => console.log("VAPI call started", e));
+            vapi.on?.("call.ended",   e => console.log("VAPI call ended", e));
+            vapi.on?.("error",        e => console.error("VAPI error", e));
+          } catch (err) {
+            console.error("VAPI init error:", err);
+          }
+        };
+        s.onerror = () => console.error("Failed to load VAPI SDK");
+        document.head.appendChild(s);
+      })();
     </script>
 </body>
 </html>
