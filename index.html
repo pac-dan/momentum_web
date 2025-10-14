@@ -446,18 +446,29 @@
           .then(config => {
             console.log('VAPI configuration loaded from server');
             
-            // Load VAPI SDK
-            const s = document.createElement("script");
-            s.src = "https://cdn.vapi.ai/sdk/v1/web.js";
-            s.async = true;
+            // Load VAPI SDK using the working script-tag bundle
+            const g = document.createElement("script");
+            g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+            g.defer = true;
+            g.async = true;
 
-            s.onload = function () {
-              if (!window.Vapi || !window.Vapi.init) {
-                console.error("VAPI SDK loaded but Vapi.init missing");
+            g.onload = function () {
+              if (!window.vapiSDK?.run) {
+                console.error("VAPI script loaded but vapiSDK.run missing");
                 return;
               }
 
-              const vapi = window.Vapi.init({ publicKey: config.publicKey });
+              // Initialize the SDK with the fetched configuration
+              const vapi = window.vapiSDK.run({
+                apiKey: config.publicKey,
+                assistant: config.assistantId,
+                config: {
+                  position: "bottom-right",
+                  offset: "32px",
+                  width: "56px",
+                  height: "56px"
+                }
+              });
 
               const btn = document.getElementById(BUTTON_ID);
               if (!btn) {
@@ -468,24 +479,26 @@
               btn.disabled = false;
               btn.style.opacity = "1";
 
-              btn.addEventListener("click", function (e) {
+              btn.addEventListener("click", async (e) => {
                 e.preventDefault();
-                vapi.start({
-                  assistantId: config.assistantId,
-                  metadata: { source: "website", pageUrl: window.location.href }
-                });
+                try {
+                  await vapi.start?.();
+                } catch (err) {
+                  console.error("VAPI start failed:", err);
+                }
               });
 
-              vapi.on?.("error", e => console.error("VAPI error", e));
-              vapi.on?.("call.started", e => console.log("VAPI call started", e));
-              vapi.on?.("call.ended", e => console.log("VAPI call ended", e));
+              // Event listeners
+              vapi.on?.("error", (e) => console.error("VAPI error", e));
+              vapi.on?.("call.started", (e) => console.log("VAPI call started", e));
+              vapi.on?.("call.ended", (e) => console.log("VAPI call ended", e));
             };
 
-            s.onerror = function () {
-              console.error("Failed to load VAPI SDK");
+            g.onerror = function () {
+              console.error("Failed to load VAPI script-tag bundle");
             };
 
-            document.head.appendChild(s);
+            document.head.appendChild(g);
           })
           .catch(error => {
             console.error("Error loading VAPI configuration:", error);
