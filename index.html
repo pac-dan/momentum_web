@@ -431,109 +431,82 @@
     <script src="script.js"></script>
     
     <!-- VAPI Voice Assistant Integration -->
-    <script>
-      (function () {
-        const PUBLIC_KEY   = "d560bfb4-8869-430b-af02-02700aad6cd2";
-        const ASSISTANT_ID = "438b7b10-80ee-4fd9-a287-d0a56929b9e8";
-        const BUTTON_ID    = "vapi-call-btn";
+    <script type="module">
+      import Vapi from 'https://unpkg.com/@vapi-ai/web@latest/dist/index.js';
+      
+      const PUBLIC_KEY = "d560bfb4-8869-430b-af02-02700aad6cd2";
+      const ASSISTANT_ID = "438b7b10-80ee-4fd9-a287-d0a56929b9e8";
+      const BUTTON_ID = "vapi-call-btn";
 
-        console.log("Starting VAPI integration...");
+      console.log("Starting VAPI integration with @vapi-ai/web...");
 
-        // Try multiple VAPI SDK URLs
-        const sdkUrls = [
-          "https://cdn.vapi.ai/vapi-assistant.js",
-          "https://cdn.vapi.ai/sdk/v1/web.js",
-          "https://unpkg.com/@vapi-ai/web@latest/dist/index.js"
-        ];
+      try {
+        // Initialize VAPI
+        const vapi = new Vapi(PUBLIC_KEY);
+        let isConnected = false;
 
-        let currentUrlIndex = 0;
+        // Setup event listeners
+        vapi.on('call-start', () => {
+          isConnected = true;
+          console.log('VAPI call started');
+        });
 
-        function tryLoadSDK() {
-          if (currentUrlIndex >= sdkUrls.length) {
-            console.error("All VAPI SDK URLs failed to load");
-            // Fallback: Create a simple button that opens VAPI in a new window
-            const btn = document.getElementById(BUTTON_ID);
-            if (btn) {
-              btn.disabled = false;
-              btn.style.opacity = "1";
-              btn.addEventListener("click", function(e) {
-                e.preventDefault();
-                // Open VAPI dashboard or contact form as fallback
-                window.open("https://vapi.ai", "_blank");
-                console.log("Opened VAPI dashboard as fallback");
-              });
-              console.log("VAPI button configured with fallback");
-            }
-            return;
+        vapi.on('call-end', () => {
+          isConnected = false;
+          console.log('VAPI call ended');
+        });
+
+        vapi.on('message', (message) => {
+          if (message.type === 'transcript') {
+            console.log(`${message.role}: ${message.transcript}`);
+          } else if (message.type === 'function-call') {
+            console.log('Function call:', message.functionCall);
           }
+        });
 
-          const s = document.createElement("script");
-          s.src = sdkUrls[currentUrlIndex];
-          s.async = true;
+        vapi.on('error', (error) => {
+          console.error('VAPI error:', error);
+        });
+
+        // Get the button and add click handler
+        const btn = document.getElementById(BUTTON_ID);
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = "1";
           
-          s.onload = function () {
-            console.log("VAPI SDK loaded successfully from:", sdkUrls[currentUrlIndex]);
+          btn.addEventListener("click", function(e) {
+            e.preventDefault();
             
-            try {
-              // Try different initialization methods
-              if (typeof vapi !== 'undefined') {
-                // Method 1: vapi-assistant.js style
-                vapi('init', {
-                  assistantId: ASSISTANT_ID,
-                  publicKey: PUBLIC_KEY,
-                  triggerButton: '#' + BUTTON_ID
-                });
-                console.log("VAPI initialized with vapi-assistant.js method");
-              } else if (window.Vapi && window.Vapi.init) {
-                // Method 2: SDK v1 style
-                const vapiInstance = window.Vapi.init({ publicKey: PUBLIC_KEY });
-                const btn = document.getElementById(BUTTON_ID);
-                if (btn) {
-                  btn.disabled = false;
-                  btn.style.opacity = "1";
-                  btn.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    vapiInstance.start({
-                      assistantId: ASSISTANT_ID,
-                      metadata: { source: "website", pageUrl: window.location.href }
-                    });
-                  });
-                  console.log("VAPI initialized with SDK v1 method");
-                }
-              } else {
-                console.error("VAPI SDK loaded but no known initialization method found");
-                currentUrlIndex++;
-                tryLoadSDK();
-                return;
-              }
-
-              // Enable the button
-              const btn = document.getElementById(BUTTON_ID);
-              if (btn) {
-                btn.disabled = false;
-                btn.style.opacity = "1";
-                console.log("VAPI button enabled successfully");
-              }
-
-            } catch (err) {
-              console.error("VAPI initialization error:", err);
-              currentUrlIndex++;
-              tryLoadSDK();
+            if (!isConnected) {
+              console.log("Starting VAPI call with assistant:", ASSISTANT_ID);
+              vapi.start(ASSISTANT_ID);
+            } else {
+              console.log("Stopping VAPI call");
+              vapi.stop();
             }
-          };
+          });
           
-          s.onerror = function() {
-            console.error("Failed to load VAPI SDK from:", sdkUrls[currentUrlIndex]);
-            currentUrlIndex++;
-            tryLoadSDK();
-          };
-          
-          document.head.appendChild(s);
+          console.log("VAPI button configured successfully");
+        } else {
+          console.error("VAPI button not found with ID:", BUTTON_ID);
         }
 
-        // Start trying to load SDK
-        tryLoadSDK();
-      })();
+      } catch (error) {
+        console.error("VAPI initialization error:", error);
+        
+        // Fallback: Simple button that opens VAPI dashboard
+        const btn = document.getElementById(BUTTON_ID);
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            window.open("https://vapi.ai", "_blank");
+            console.log("Opened VAPI dashboard as fallback");
+          });
+          console.log("VAPI button configured with fallback");
+        }
+      }
     </script>
 </body>
 </html>
