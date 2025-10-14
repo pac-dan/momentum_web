@@ -25,6 +25,10 @@
             </ul>
             <div class="nav-cta">
                 <a href="#contact" class="btn-primary">Book Free Strategy Call</a>
+                <button id="vapi-call-btn" class="btn-vapi nav-vapi" title="Talk to our AI Receptionist">
+                    <i class="fas fa-phone"></i>
+                    AI Assistant
+                </button>
             </div>
             <div class="hamburger">
                 <span></span><span></span><span></span>
@@ -397,6 +401,8 @@
     <!-- VAPI Voice Assistant Integration -->
     <script>
       (function () {
+        const BUTTON_ID = "vapi-call-btn";
+        
         fetch('/api/vapi-config')
           .then(response => {
             if (!response.ok) throw new Error('Failed to fetch VAPI configuration');
@@ -411,7 +417,21 @@
               const vapi = window.vapiSDK.run({
                 apiKey: config.publicKey,
                 assistant: config.assistantId,
-                config: { position: "bottom-right", offset: "32px", width: "56px", height: "56px" }
+                config: { position: "hidden" } // Hide the default widget
+              });
+              
+              const btn = document.getElementById(BUTTON_ID);
+              if (!btn) return console.error("#" + BUTTON_ID + " not found");
+              btn.disabled = false; btn.style.opacity = "1";
+              
+              btn.addEventListener("click", async (e) => {
+                e.preventDefault();
+                try { 
+                  await vapi.start?.(); 
+                } catch (err) { 
+                  console.error("VAPI start failed:", err);
+                  alert("AI Assistant temporarily unavailable. Please try again later.");
+                }
               });
               
               // Event listeners
@@ -424,6 +444,14 @@
           })
           .catch(error => {
             console.error("Error loading VAPI configuration:", error);
+            const btn = document.getElementById(BUTTON_ID);
+            if (btn) {
+              btn.disabled = false; btn.style.opacity = "1";
+              btn.addEventListener("click", function(e) {
+                e.preventDefault();
+                alert("AI Assistant temporarily unavailable. Please try again later.");
+              });
+            }
           });
       })();
     </script>

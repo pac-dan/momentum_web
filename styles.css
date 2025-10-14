@@ -119,11 +119,53 @@ p {
     font-size: 0.9rem;
 }
 
+/* Nav VAPI Button */
+.nav-vapi {
+    margin-left: 12px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+.nav-vapi:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+}
+
+.nav-vapi i {
+    margin-right: 6px;
+    font-size: 0.85rem;
+}
+
 /* VAPI Button Responsive Styles */
 @media (max-width: 768px) {
     .btn-vapi {
         padding: 14px 20px;
         font-size: 0.95rem;
+    }
+    
+    .nav-vapi {
+        margin-left: 8px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        min-height: 36px;
+    }
+    
+    .nav-vapi i {
+        margin-right: 4px;
+        font-size: 0.8rem;
     }
 }
 
