@@ -430,151 +430,52 @@
 
     <script src="script.js"></script>
     
-    <!-- VAPI Voice Assistant Integration -->
+    <!-- VAPI Voice Assistant Integration (CORS-safe) -->
     <script>
-      (function() {
-        const PUBLIC_KEY = "d560bfb4-8869-430b-af02-02700aad6cd2";
+      (function () {
+        const PUBLIC_KEY   = "d560bfb4-8869-430b-af02-02700aad6cd2";
         const ASSISTANT_ID = "438b7b10-80ee-4fd9-a287-d0a56929b9e8";
-        const BUTTON_ID = "vapi-call-btn";
+        const BUTTON_ID    = "vapi-call-btn";
 
-        console.log("Starting VAPI integration...");
+        const s = document.createElement("script");
+        s.src = "https://cdn.vapi.ai/sdk/v1/web.js"; // official, CORS-safe SDK
+        s.async = true;
 
-        // Try to load VAPI SDK from different sources
-        const sdkUrls = [
-          "https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/index.js",
-          "https://cdnjs.cloudflare.com/ajax/libs/vapi-web/latest/vapi-web.min.js",
-          "https://cdn.vapi.ai/vapi-assistant.js"
-        ];
-
-        let currentUrlIndex = 0;
-        let vapiInstance = null;
-        let isConnected = false;
-
-        function tryLoadSDK() {
-          if (currentUrlIndex >= sdkUrls.length) {
-            console.error("All VAPI SDK URLs failed to load");
-            setupFallbackButton();
+        s.onload = function () {
+          if (!window.Vapi || !window.Vapi.init) {
+            console.error("VAPI SDK loaded but Vapi.init missing");
             return;
           }
 
-          const script = document.createElement("script");
-          script.src = sdkUrls[currentUrlIndex];
-          script.async = true;
-          
-          script.onload = function() {
-            console.log("VAPI SDK loaded successfully from:", sdkUrls[currentUrlIndex]);
-            
-            try {
-              // Try different initialization methods based on what loaded
-              if (typeof Vapi !== 'undefined') {
-                // Modern @vapi-ai/web package
-                vapiInstance = new Vapi(PUBLIC_KEY);
-                setupEventHandlers();
-                console.log("VAPI initialized with @vapi-ai/web");
-              } else if (typeof vapi !== 'undefined') {
-                // vapi-assistant.js style
-                vapi('init', {
-                  assistantId: ASSISTANT_ID,
-                  publicKey: PUBLIC_KEY,
-                  triggerButton: '#' + BUTTON_ID
-                });
-                console.log("VAPI initialized with vapi-assistant.js");
-              } else {
-                console.error("VAPI SDK loaded but no known initialization method found");
-                currentUrlIndex++;
-                tryLoadSDK();
-                return;
-              }
+          const vapi = window.Vapi.init({ publicKey: PUBLIC_KEY });
 
-              setupButton();
-              
-            } catch (error) {
-              console.error("VAPI initialization error:", error);
-              currentUrlIndex++;
-              tryLoadSDK();
-            }
-          };
-          
-          script.onerror = function() {
-            console.error("Failed to load VAPI SDK from:", sdkUrls[currentUrlIndex]);
-            currentUrlIndex++;
-            tryLoadSDK();
-          };
-          
-          document.head.appendChild(script);
-        }
-
-        function setupEventHandlers() {
-          if (!vapiInstance) return;
-
-          vapiInstance.on('call-start', () => {
-            isConnected = true;
-            console.log('VAPI call started');
-          });
-
-          vapiInstance.on('call-end', () => {
-            isConnected = false;
-            console.log('VAPI call ended');
-          });
-
-          vapiInstance.on('message', (message) => {
-            if (message.type === 'transcript') {
-              console.log(`${message.role}: ${message.transcript}`);
-            } else if (message.type === 'function-call') {
-              console.log('Function call:', message.functionCall);
-            }
-          });
-
-          vapiInstance.on('error', (error) => {
-            console.error('VAPI error:', error);
-          });
-        }
-
-        function setupButton() {
           const btn = document.getElementById(BUTTON_ID);
-          if (btn) {
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            
-            btn.addEventListener("click", function(e) {
-              e.preventDefault();
-              
-              if (vapiInstance) {
-                if (!isConnected) {
-                  console.log("Starting VAPI call with assistant:", ASSISTANT_ID);
-                  vapiInstance.start(ASSISTANT_ID);
-                } else {
-                  console.log("Stopping VAPI call");
-                  vapiInstance.stop();
-                }
-              } else {
-                console.log("VAPI not initialized, using fallback");
-                window.open("https://vapi.ai", "_blank");
-              }
-            });
-            
-            console.log("VAPI button configured successfully");
-          } else {
-            console.error("VAPI button not found with ID:", BUTTON_ID);
+          if (!btn) {
+            console.error(`#${BUTTON_ID} not found`);
+            return;
           }
-        }
 
-        function setupFallbackButton() {
-          const btn = document.getElementById(BUTTON_ID);
-          if (btn) {
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            btn.addEventListener("click", function(e) {
-              e.preventDefault();
-              window.open("https://vapi.ai", "_blank");
-              console.log("Opened VAPI dashboard as fallback");
+          btn.disabled = false;
+          btn.style.opacity = "1";
+
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            vapi.start({
+              assistantId: ASSISTANT_ID,
+              metadata: { source: "website", pageUrl: window.location.href }
             });
-            console.log("VAPI button configured with fallback");
-          }
-        }
+          });
 
-        // Start loading SDK
-        tryLoadSDK();
+          vapi.on?.("error", e => console.error("VAPI error", e));
+          vapi.on?.("call.started", e => console.log("VAPI call started", e));
+          vapi.on?.("call.ended", e => console.log("VAPI call ended", e));
+        };
+
+        s.onerror = function () {
+          console.error("Failed to load VAPI SDK");
+        };
+
+        document.head.appendChild(s);
       })();
     </script>
 </body>
