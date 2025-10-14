@@ -25,10 +25,6 @@
             </ul>
             <div class="nav-cta">
                 <a href="#contact" class="btn-primary">Book Free Strategy Call</a>
-                <button id="vapi-call-btn" class="btn-vapi nav-vapi" title="Talk to our AI Receptionist">
-                    <i class="fas fa-phone"></i>
-                    AI Assistant
-                </button>
             </div>
             <div class="hamburger">
                 <span></span><span></span><span></span>
@@ -398,13 +394,9 @@
 
     <script src="script.js"></script>
 
-    <!-- VAPI: single init + navbar button -->
+    <!-- VAPI: floating widget -->
     <script>
     (function () {
-      const NAV_BTN_ID = "vapi-call-btn";
-      const navBtn = document.getElementById(NAV_BTN_ID);
-      if (navBtn) { navBtn.disabled = true; navBtn.style.opacity = "0.6"; }
-
       fetch("/api/vapi-config")
         .then(r => { if (!r.ok) throw new Error("config fetch failed"); return r.json(); })
         .then(cfg => {
@@ -414,34 +406,11 @@
 
           s.onload = () => {
             if (!window.vapiSDK?.run) return console.error("VAPI SDK missing");
-            // Init once (let it mount, then we'll hide the floating widget)
+            // Initialize VAPI with default floating widget
             const vapi = window.vapiSDK.run({
               apiKey: cfg.publicKey,
               assistant: cfg.assistantId,
-              config: { position: "bottom-left", draggable: false }
-            });
-
-            // Hide the default floating widget so we can use our navbar button
-            const hideWidget = () => {
-              const root =
-                document.querySelector('iframe[src*="vapi"]')?.parentElement ||
-                document.querySelector("[data-vapi-root]");
-              if (root) root.style.display = "none";
-            };
-            setTimeout(hideWidget, 500);
-            new MutationObserver(hideWidget).observe(document.body, { childList: true, subtree: true });
-
-            vapi.on?.("ready", () => {
-              if (navBtn) { navBtn.disabled = false; navBtn.style.opacity = "1"; }
-            });
-
-            navBtn?.addEventListener("click", async (e) => {
-              e.preventDefault();
-              try { await vapi.start?.(); }
-              catch (err) {
-                console.error("VAPI start failed:", err);
-                alert("AI Assistant temporarily unavailable. Please try again.");
-              }
+              config: { position: "bottom-right", draggable: false }
             });
 
             vapi.on?.("error", (e) => console.error("VAPI error", e));
@@ -454,13 +423,6 @@
         })
         .catch(err => {
           console.error("Error loading VAPI configuration:", err);
-          if (navBtn) {
-            navBtn.disabled = false; navBtn.style.opacity = "1";
-            navBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              alert("AI Assistant temporarily unavailable. Please try again later.");
-            });
-          }
         });
     })();
     </script>

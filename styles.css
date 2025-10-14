@@ -1081,3 +1081,14 @@ p {
         text-align: center;
     }
 }
+
+/* Position VAPI floating widget in navbar area */
+[data-vapi-root],
+iframe[src*="vapi"] {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 10000 !important;
+}
