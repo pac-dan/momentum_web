@@ -430,67 +430,78 @@
 
     <script src="script.js"></script>
     
-    <!-- VAPI Voice Assistant Integration (CORS-safe) -->
-    <!-- Vapi Voice Assistant (script-tag bundle) -->
-<script>
-    (function (d, t) {
-      const PUBLIC_KEY   = "d560bfb4-8869-430b-af02-02700aad6cd2"; // your public key
-      const ASSISTANT_ID = "438b7b10-80ee-4fd9-a287-d0a56929b9e8"; // your assistant id
-      const BUTTON_ID    = "vapi-call-btn"; // your existing button
-  
-      // Load the official script-tag build from jsDelivr (CORS/DNS friendly)
-      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-      g.defer = true; g.async = true;
-      s.parentNode.insertBefore(g, s);
-  
-      g.onload = function () {
-        if (!window.vapiSDK?.run) {
-          console.error("Vapi script loaded but vapiSDK.run missing");
-          return;
-        }
-  
-        // Initialize the SDK. Pass the assistantId so the built-in widget also works.
-        const vapi = window.vapiSDK.run({
-          apiKey: PUBLIC_KEY,
-          assistant: ASSISTANT_ID,
-          // optional widget styling (shows a floating button too)
-          config: {
-            position: "bottom-right",
-            offset: "32px",
-            width: "56px",
-            height: "56px"
-          }
-        });
-  
-        // Wire up YOUR page button to start a call as well
-        const btn = document.getElementById(BUTTON_ID);
-        if (btn) {
-          btn.disabled = false;
-          btn.style.opacity = "1";
-          btn.addEventListener("click", async (e) => {
-            e.preventDefault();
-            try {
-              // start a call (assistant already configured above)
-              await vapi.start?.();
-            } catch (err) {
-              console.error("Vapi start failed:", err);
+    <!-- VAPI Voice Assistant Integration (Secure) -->
+    <script>
+      (function () {
+        const BUTTON_ID = "vapi-call-btn";
+
+        // Fetch VAPI configuration from server
+        fetch('/api/vapi-config')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to fetch VAPI configuration');
+            }
+            return response.json();
+          })
+          .then(config => {
+            console.log('VAPI configuration loaded from server');
+            
+            // Load VAPI SDK
+            const s = document.createElement("script");
+            s.src = "https://cdn.vapi.ai/sdk/v1/web.js";
+            s.async = true;
+
+            s.onload = function () {
+              if (!window.Vapi || !window.Vapi.init) {
+                console.error("VAPI SDK loaded but Vapi.init missing");
+                return;
+              }
+
+              const vapi = window.Vapi.init({ publicKey: config.publicKey });
+
+              const btn = document.getElementById(BUTTON_ID);
+              if (!btn) {
+                console.error(`#${BUTTON_ID} not found`);
+                return;
+              }
+
+              btn.disabled = false;
+              btn.style.opacity = "1";
+
+              btn.addEventListener("click", function (e) {
+                e.preventDefault();
+                vapi.start({
+                  assistantId: config.assistantId,
+                  metadata: { source: "website", pageUrl: window.location.href }
+                });
+              });
+
+              vapi.on?.("error", e => console.error("VAPI error", e));
+              vapi.on?.("call.started", e => console.log("VAPI call started", e));
+              vapi.on?.("call.ended", e => console.log("VAPI call ended", e));
+            };
+
+            s.onerror = function () {
+              console.error("Failed to load VAPI SDK");
+            };
+
+            document.head.appendChild(s);
+          })
+          .catch(error => {
+            console.error("Error loading VAPI configuration:", error);
+            
+            // Fallback: Enable button with error message
+            const btn = document.getElementById(BUTTON_ID);
+            if (btn) {
+              btn.disabled = false;
+              btn.style.opacity = "1";
+              btn.addEventListener("click", function(e) {
+                e.preventDefault();
+                alert("VAPI service temporarily unavailable. Please try again later.");
+              });
             }
           });
-        } else {
-          console.warn(`#${BUTTON_ID} not found`);
-        }
-  
-        // Helpful logs
-        vapi.on?.("error", (e) => console.error("Vapi error", e));
-        vapi.on?.("call.started", (e) => console.log("Vapi call started", e));
-        vapi.on?.("call.ended", (e) => console.log("Vapi call ended", e));
-      };
-  
-      g.onerror = function () {
-        console.error("Failed to load Vapi script-tag bundle");
-      };
-    })(document, "script");
-  </script>  
+      })();
+    </script>  
 </body>
 </html>
