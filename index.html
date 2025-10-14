@@ -437,79 +437,102 @@
         const ASSISTANT_ID = "438b7b10-80ee-4fd9-a287-d0a56929b9e8";
         const BUTTON_ID    = "vapi-call-btn";
 
-        const s = document.createElement("script");
-        s.src = "https://cdn.vapi.ai/vapi-assistant.js";
-        s.async = true;
-        s.onload = function () {
-          try {
-            console.log("VAPI SDK loaded successfully");
-            
-            // Check if VAPI is available
-            if (typeof vapi === 'undefined') {
-              console.error("VAPI not found after loading SDK");
-              return;
-            }
+        console.log("Starting VAPI integration...");
 
-            // Initialize VAPI
-            vapi('init', {
-              assistantId: ASSISTANT_ID,
-              publicKey: PUBLIC_KEY,
-              triggerButton: '#' + BUTTON_ID
-            });
+        // Try multiple VAPI SDK URLs
+        const sdkUrls = [
+          "https://cdn.vapi.ai/vapi-assistant.js",
+          "https://cdn.vapi.ai/sdk/v1/web.js",
+          "https://unpkg.com/@vapi-ai/web@latest/dist/index.js"
+        ];
 
-            console.log("VAPI initialized successfully");
+        let currentUrlIndex = 0;
 
-            // Enable the button
+        function tryLoadSDK() {
+          if (currentUrlIndex >= sdkUrls.length) {
+            console.error("All VAPI SDK URLs failed to load");
+            // Fallback: Create a simple button that opens VAPI in a new window
             const btn = document.getElementById(BUTTON_ID);
             if (btn) {
               btn.disabled = false;
               btn.style.opacity = "1";
-              console.log("VAPI button enabled");
+              btn.addEventListener("click", function(e) {
+                e.preventDefault();
+                // Open VAPI dashboard or contact form as fallback
+                window.open("https://vapi.ai", "_blank");
+                console.log("Opened VAPI dashboard as fallback");
+              });
+              console.log("VAPI button configured with fallback");
             }
-
-          } catch (err) {
-            console.error("VAPI initialization error:", err);
+            return;
           }
-        };
-        
-        s.onerror = function() {
-          console.error("Failed to load VAPI SDK from:", s.src);
-          console.log("Trying alternative SDK URL...");
+
+          const s = document.createElement("script");
+          s.src = sdkUrls[currentUrlIndex];
+          s.async = true;
           
-          // Try alternative SDK URL
-          const altScript = document.createElement("script");
-          altScript.src = "https://cdn.vapi.ai/sdk/v1/web.js";
-          altScript.async = true;
-          altScript.onload = function() {
-            console.log("Alternative VAPI SDK loaded");
+          s.onload = function () {
+            console.log("VAPI SDK loaded successfully from:", sdkUrls[currentUrlIndex]);
+            
             try {
-              if (window.Vapi && window.Vapi.init) {
-                const vapi = window.Vapi.init({ publicKey: PUBLIC_KEY });
+              // Try different initialization methods
+              if (typeof vapi !== 'undefined') {
+                // Method 1: vapi-assistant.js style
+                vapi('init', {
+                  assistantId: ASSISTANT_ID,
+                  publicKey: PUBLIC_KEY,
+                  triggerButton: '#' + BUTTON_ID
+                });
+                console.log("VAPI initialized with vapi-assistant.js method");
+              } else if (window.Vapi && window.Vapi.init) {
+                // Method 2: SDK v1 style
+                const vapiInstance = window.Vapi.init({ publicKey: PUBLIC_KEY });
                 const btn = document.getElementById(BUTTON_ID);
                 if (btn) {
                   btn.disabled = false;
                   btn.style.opacity = "1";
                   btn.addEventListener("click", function (e) {
                     e.preventDefault();
-                    vapi.start({
+                    vapiInstance.start({
                       assistantId: ASSISTANT_ID,
                       metadata: { source: "website", pageUrl: window.location.href }
                     });
                   });
-                  console.log("VAPI button configured with alternative SDK");
+                  console.log("VAPI initialized with SDK v1 method");
                 }
+              } else {
+                console.error("VAPI SDK loaded but no known initialization method found");
+                currentUrlIndex++;
+                tryLoadSDK();
+                return;
               }
+
+              // Enable the button
+              const btn = document.getElementById(BUTTON_ID);
+              if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                console.log("VAPI button enabled successfully");
+              }
+
             } catch (err) {
-              console.error("Alternative VAPI init error:", err);
+              console.error("VAPI initialization error:", err);
+              currentUrlIndex++;
+              tryLoadSDK();
             }
           };
-          altScript.onerror = function() {
-            console.error("Both VAPI SDK URLs failed to load");
+          
+          s.onerror = function() {
+            console.error("Failed to load VAPI SDK from:", sdkUrls[currentUrlIndex]);
+            currentUrlIndex++;
+            tryLoadSDK();
           };
-          document.head.appendChild(altScript);
-        };
-        
-        document.head.appendChild(s);
+          
+          document.head.appendChild(s);
+        }
+
+        // Start trying to load SDK
+        tryLoadSDK();
       })();
     </script>
 </body>
