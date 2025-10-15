@@ -66,11 +66,11 @@ if (contactForm) {
             
             const result = await response.json();
             
-            if (result.success) {
+            if (response.ok) {
                 alert('Thank you for your message! We\'ll get back to you within 24 hours.');
                 this.reset();
             } else {
-                alert(result.error || 'Something went wrong. Please try again.');
+                alert(result.message || 'Something went wrong. Please try again.');
             }
         } catch (error) {
             console.error('Form submission error:', error);
