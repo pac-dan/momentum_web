@@ -317,6 +317,21 @@ p {
     color: #ccc;
 }
 
+.trust-item {
+    background: rgba(42, 42, 42, 0.5);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+}
+
+.trust-item:hover {
+    transform: translateY(-3px);
+    border-color: #764ba2;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+}
+
 .trust-item h3 {
     font-weight: 600;
     font-size: 1.3rem;
@@ -328,7 +343,6 @@ p {
     font-size: 0.95rem;
     line-height: 1.5;
     color: #bbb;
-    max-width: 22ch;
     margin: 0;
 }
 
