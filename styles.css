@@ -370,8 +370,9 @@ p {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
     border: 1px solid #333;
+    will-change: transform;
 }
 
 .floating-card i {
@@ -1167,7 +1168,7 @@ div[style*="vapi"] {
     font-size: 1.2rem;
 }
 
-/* Pulsing animation to draw attention */
+/* Simplified pulse animation for better performance */
 .vapi-assistant-button::before {
     content: '';
     position: absolute;
@@ -1179,21 +1180,17 @@ div[style*="vapi"] {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     opacity: 0;
     z-index: -1;
-    animation: pulse 2s infinite;
+    animation: pulse 3s infinite;
 }
 
 @keyframes pulse {
-    0% {
+    0%, 100% {
         transform: scale(1);
-        opacity: 0.5;
+        opacity: 0;
     }
     50% {
-        transform: scale(1.1);
-        opacity: 0;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0;
+        transform: scale(1.05);
+        opacity: 0.3;
     }
 }
 

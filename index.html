@@ -6,8 +6,8 @@
     <title>Momentum Digital — AI Inbound & CRM Agents for Service Businesses</title>
     <meta name="description" content="Momentum Digital builds voice AI receptionists and CRM workflow agents that answer calls, book appointments, and update your systems 24/7. Fast setup, no long-term contracts." />
     <link rel="stylesheet" href="styles.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'" />
 </head>
 <body>
     <!-- Navigation -->
@@ -390,15 +390,21 @@
         <span>Talk to our assistant</span>
     </button>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 
-    <!-- VAPI: Custom Integration -->
+    <!-- VAPI: Optimized Async Integration -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM ready - initializing VAPI');
+    // Initialize VAPI asynchronously after page load to prevent blocking
+    window.addEventListener('load', function() {
+      // Small delay to ensure page is fully loaded
+      setTimeout(initializeVAPI, 100);
+    });
+
+    function initializeVAPI() {
+      console.log('Initializing VAPI...');
       
       let vapiInstance = null;
-      let vapiState = 'loading'; // loading, ready, error
+      let vapiState = 'loading';
       let vapiConfig = null;
       const customBtn = document.getElementById('vapiAssistantBtn');
       
@@ -409,7 +415,7 @@
       
       console.log('VAPI button element found:', customBtn);
       
-      // Add immediate click handler with fallback
+      // Add click handler with immediate feedback
       customBtn.addEventListener('click', function() {
         console.log('VAPI button clicked, state:', vapiState);
         
@@ -440,8 +446,7 @@
         }
       });
       
-      // Fetch Vapi configuration from server
-      console.log('Fetching VAPI configuration...');
+      // Fetch VAPI configuration asynchronously
       fetch("/api/vapi-config")
         .then(r => { 
           console.log('VAPI config fetch response:', r.status);
@@ -452,8 +457,7 @@
           console.log('VAPI config received:', cfg);
           vapiConfig = cfg;
           
-          // Load Vapi SDK
-          console.log('Loading VAPI SDK...');
+          // Load VAPI SDK asynchronously
           const s = document.createElement("script");
           s.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
           s.async = true; 
@@ -536,7 +540,7 @@
             customBtn.style.cursor = 'not-allowed';
           }
         });
-    });
+    }
     </script>
 </body>
 </html>

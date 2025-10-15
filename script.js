@@ -91,7 +91,7 @@ if (contactForm) {
     });
 }
 
-// Intersection Observer for Animations
+// Intersection Observer for Animations - Optimized
 const observerOptions = {
     threshold: 0.1,
     rootMargin: '0px 0px -50px 0px'
@@ -102,6 +102,8 @@ const observer = new IntersectionObserver((entries) => {
         if (entry.isIntersecting) {
             entry.target.style.opacity = '1';
             entry.target.style.transform = 'translateY(0)';
+            // Stop observing once animated
+            observer.unobserve(entry.target);
         }
     });
 }, observerOptions);
@@ -192,12 +194,15 @@ window.addEventListener('load', () => {
     document.body.style.opacity = '1';
 });
 
-// Initialize page
+// Initialize page with optimized loading
 document.addEventListener('DOMContentLoaded', () => {
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.5s ease';
-    
-    setTimeout(() => {
-        document.body.style.opacity = '1';
-    }, 100);
+    // Only apply loading animation if page is still loading
+    if (document.readyState === 'loading') {
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.3s ease';
+        
+        requestAnimationFrame(() => {
+            document.body.style.opacity = '1';
+        });
+    }
 });
