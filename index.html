@@ -384,69 +384,19 @@
     </div>
     </footer>
 
-    <!-- Custom Vapi Assistant Button -->
-    <button class="vapi-assistant-button" id="vapiAssistantBtn" aria-label="Talk to our AI assistant">
-        <i class="fas fa-headset"></i>
-        <span>Talk to our assistant</span>
-    </button>
-
     <script src="script.js" defer></script>
 
-    <!-- VAPI: Optimized Async Integration -->
+    <!-- VAPI: Default Integration -->
     <script>
-    // Initialize VAPI asynchronously after page load to prevent blocking
+    // Initialize VAPI with default widget
     window.addEventListener('load', function() {
-      // Small delay to ensure page is fully loaded
       setTimeout(initializeVAPI, 100);
     });
 
     function initializeVAPI() {
-      console.log('Initializing VAPI...');
+      console.log('Initializing VAPI with default widget...');
       
-      let vapiInstance = null;
-      let vapiState = 'loading';
-      let vapiConfig = null;
-      const customBtn = document.getElementById('vapiAssistantBtn');
-      
-      if (!customBtn) {
-        console.error('VAPI button element not found');
-        return;
-      }
-      
-      console.log('VAPI button element found:', customBtn);
-      
-      // Add click handler with immediate feedback
-      customBtn.addEventListener('click', function() {
-        console.log('VAPI button clicked, state:', vapiState);
-        
-        if (vapiState === 'ready' && vapiInstance) {
-          console.log('Starting VAPI call');
-          vapiInstance.start(vapiConfig.assistantId);
-        } else if (vapiState === 'loading') {
-          console.log('VAPI still loading, showing loading state');
-          customBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Loading...</span>';
-          customBtn.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)';
-          
-          // Reset after 3 seconds if still loading
-          setTimeout(() => {
-            if (vapiState === 'loading') {
-              customBtn.innerHTML = '<i class="fas fa-headset"></i><span>Talk to our assistant</span>';
-              customBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            }
-          }, 3000);
-        } else {
-          console.log('VAPI not ready, state:', vapiState);
-          customBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Try again</span>';
-          customBtn.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
-          
-          setTimeout(() => {
-            customBtn.innerHTML = '<i class="fas fa-headset"></i><span>Talk to our assistant</span>';
-            customBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          }, 2000);
-        }
-      });
-      
-      // Fetch VAPI configuration asynchronously
+      // Fetch VAPI configuration
       fetch("/api/vapi-config")
         .then(r => { 
           console.log('VAPI config fetch response:', r.status);
@@ -455,9 +405,8 @@
         })
         .then(cfg => {
           console.log('VAPI config received:', cfg);
-          vapiConfig = cfg;
           
-          // Load VAPI SDK asynchronously
+          // Load VAPI SDK
           const s = document.createElement("script");
           s.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
           s.async = true; 
@@ -467,78 +416,27 @@
             console.log('VAPI SDK loaded');
             if (!window.vapiSDK?.run) {
               console.error("VAPI SDK missing");
-              vapiState = 'error';
               return;
             }
             
-            console.log('Initializing VAPI instance...');
-            // Initialize VAPI without default widget
-            vapiInstance = window.vapiSDK.run({
+            console.log('Initializing VAPI with default widget...');
+            // Initialize VAPI with default widget
+            const vapiInstance = window.vapiSDK.run({
               apiKey: cfg.publicKey,
-              assistant: cfg.assistantId,
-              config: { 
-                buttonConfig: {
-                  position: "bottom-right",
-                  offset: "0px",
-                  width: "0px",
-                  height: "0px",
-                  idle: { color: { background: "transparent" } },
-                  loading: { color: { background: "transparent" } },
-                  active: { color: { background: "transparent" } }
-                }
-              }
+              assistant: cfg.assistantId
             });
 
             console.log('VAPI instance created:', vapiInstance);
-            vapiState = 'ready';
-
-            // Event listeners
-            vapiInstance.on?.("call-start", () => {
-              console.log("VAPI call started");
-              if (customBtn) {
-                customBtn.innerHTML = '<i class="fas fa-phone"></i><span>Call in progress...</span>';
-                customBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-              }
-            });
-
-            vapiInstance.on?.("call-end", () => {
-              console.log("VAPI call ended");
-              if (customBtn) {
-                customBtn.innerHTML = '<i class="fas fa-headset"></i><span>Talk to our assistant</span>';
-                customBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-              }
-            });
-
-            vapiInstance.on?.("error", (e) => {
-              console.error("VAPI error", e);
-              vapiState = 'error';
-              if (customBtn) {
-                customBtn.innerHTML = '<i class="fas fa-headset"></i><span>Talk to our assistant</span>';
-                customBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-              }
-            });
           };
 
           s.onerror = () => {
             console.error("Failed to load VAPI SDK");
-            vapiState = 'error';
-            if (customBtn) {
-              customBtn.disabled = true;
-              customBtn.style.opacity = '0.5';
-              customBtn.style.cursor = 'not-allowed';
-            }
           };
 
           document.head.appendChild(s);
         })
         .catch(err => {
           console.error("Error loading VAPI configuration:", err);
-          vapiState = 'error';
-          if (customBtn) {
-            customBtn.disabled = true;
-            customBtn.style.opacity = '0.5';
-            customBtn.style.cursor = 'not-allowed';
-          }
         });
     }
     </script>
