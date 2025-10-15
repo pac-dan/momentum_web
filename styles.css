@@ -1123,12 +1123,12 @@ p {
     }
 }
 
-/* Hide Vapi Default Widget - Force hide all default Vapi elements */
+/* Hide Vapi Default Widget - Force hide only the default widget elements */
 [data-vapi-root],
-[id*="vapi"],
-[class*="vapi-btn"],
 iframe[src*="vapi"],
-div[style*="vapi"] {
+div[style*="vapi"],
+/* Hide specific default VAPI widget elements but allow custom buttons */
+button[id="vapi-support-btn"] {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
