@@ -308,25 +308,27 @@ p {
     color: #b0b0b0;
 }
 
-.hero-stats {
-    display: flex;
+.hero-trust {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
+    margin-top: 2rem;
     margin-bottom: 2rem;
+    color: #ccc;
 }
 
-.stat {
-    text-align: center;
-}
-
-.stat h3 {
-    font-size: 2rem;
-    color: #667eea;
+.trust-item h3 {
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: #a9b5ff;
     margin-bottom: 0.5rem;
 }
 
-.stat p {
-    font-size: 0.9rem;
-    color: #b0b0b0;
+.trust-item p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #bbb;
+    max-width: 22ch;
     margin: 0;
 }
 
@@ -395,6 +397,11 @@ p {
 .problem {
     padding: 80px 0;
     background: #222222;
+    background-image: url('media/blue-gradient-abstract-background-empty-room-with-space-your-text-picture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+    background-color: rgba(26, 26, 26, 0.85);
 }
 
 .problem h2 {
@@ -558,6 +565,11 @@ p {
 .case-study {
     padding: 80px 0;
     background: #222222;
+    background-image: url('media/stripes-blue-leaf.jpg');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+    background-color: rgba(26, 26, 26, 0.85);
 }
 
 .case-study-content {
@@ -698,6 +710,11 @@ p {
 .faq {
     padding: 80px 0;
     background: #222222;
+    background-image: url('media/blue-gradient-abstract-background-empty-room-with-space-your-text-picture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+    background-color: rgba(26, 26, 26, 0.85);
 }
 
 .faq-grid {
@@ -824,6 +841,11 @@ p {
 .contact {
     padding: 80px 0;
     background: #222222;
+    background-image: url('media/stripes-blue-leaf.jpg');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+    background-color: rgba(26, 26, 26, 0.85);
 }
 
 .contact-content {
@@ -902,6 +924,10 @@ p {
     color: white;
     padding: 60px 0 20px;
     border-top: 1px solid #333;
+}
+
+.foot-top {
+    padding-top: 20px;
 }
 
 .footer-content {
@@ -997,7 +1023,7 @@ p {
         text-align: center;
     }
     
-    .hero-stats {
+    .hero-trust {
         justify-content: center;
     }
     
@@ -1064,9 +1090,9 @@ p {
         padding: 100px 0 60px;
     }
     
-    .hero-stats {
-        flex-direction: column;
-        gap: 1rem;
+    .hero-trust {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
     
     .hero-cta {

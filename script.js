@@ -36,7 +36,7 @@ window.addEventListener('scroll', () => {
 // Contact Form Handling
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
+    contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         // Get form data
@@ -49,19 +49,36 @@ if (contactForm) {
             return;
         }
         
-        // Simulate form submission
+        // Submit form
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
         submitBtn.textContent = 'Sending...';
         submitBtn.disabled = true;
         
-        // Simulate API call
-        setTimeout(() => {
-            alert('Thank you for your message! We\'ll get back to you within 24 hours.');
-            this.reset();
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Thank you for your message! We\'ll get back to you within 24 hours.');
+                this.reset();
+            } else {
+                alert(result.error || 'Something went wrong. Please try again.');
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            alert('Failed to send message. Please try emailing us directly at kevin@webmomentumdigital.com');
+        } finally {
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
-        }, 2000);
+        }
     });
 }
 
@@ -92,17 +109,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Counter Animation for Stats
-function animateCounter(element, target, duration = 2000) {
+// Counter Animation for Stats - preserves HTML entities and special characters
+function animateCounter(element, target, duration = 2000, template = null) {
     let start = 0;
     const increment = target / (duration / 16);
     
     const timer = setInterval(() => {
         start += increment;
-        element.textContent = Math.floor(start);
+        const currentValue = Math.floor(start);
+        
+        // If we have a template, use it to preserve formatting
+        if (template) {
+            element.innerHTML = template.replace('NUMBER', currentValue);
+        } else {
+            element.textContent = currentValue;
+        }
         
         if (start >= target) {
-            element.textContent = target;
+            if (template) {
+                element.innerHTML = template.replace('NUMBER', target);
+            } else {
+                element.textContent = target;
+            }
             clearInterval(timer);
         }
     }, 16);
@@ -114,11 +142,29 @@ const statsObserver = new IntersectionObserver((entries) => {
         if (entry.isIntersecting) {
             const statNumbers = entry.target.querySelectorAll('.stat h3');
             statNumbers.forEach(stat => {
+                const originalHTML = stat.innerHTML;
                 const text = stat.textContent;
-                const number = parseInt(text.replace(/\D/g, ''));
-                if (number) {
-                    stat.textContent = '0';
-                    animateCounter(stat, number);
+                
+                // Extract all numbers from the text
+                const numbers = text.match(/\d+/g);
+                
+                if (numbers && numbers.length > 0) {
+                    // If it's a pure number with no special chars
+                    if (text.match(/^\d+$/)) {
+                        const target = parseInt(numbers[0]);
+                        stat.textContent = '0';
+                        animateCounter(stat, target);
+                    } 
+                    // If it has special characters, animate first number and preserve format
+                    else if (numbers.length === 1) {
+                        const target = parseInt(numbers[0]);
+                        // Create a template by replacing the number with a placeholder
+                        const template = originalHTML.replace(numbers[0], 'NUMBER');
+                        stat.innerHTML = template.replace('NUMBER', '0');
+                        animateCounter(stat, target, 2000, template);
+                    }
+                    // For multiple numbers (like "1-2"), don't animate to keep it simple
+                    // Or you could add more complex logic here if needed
                 }
             });
             statsObserver.unobserve(entry.target);
@@ -126,10 +172,11 @@ const statsObserver = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.5 });
 
-const heroStats = document.querySelector('.hero-stats');
-if (heroStats) {
-    statsObserver.observe(heroStats);
-}
+// Stats observer removed - hero section now uses integration proof instead of animated stats
+// const heroStats = document.querySelector('.hero-stats');
+// if (heroStats) {
+//     statsObserver.observe(heroStats);
+// }
 
 // Add loading animation
 window.addEventListener('load', () => {
