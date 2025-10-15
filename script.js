@@ -66,10 +66,14 @@ if (contactForm) {
             
             const result = await response.json();
             
-            if (response.ok) {
+            if (response.ok && result.ok) {
                 alert('Thank you for your message! We\'ll get back to you within 24 hours.');
                 this.reset();
             } else {
+                // Log server error details to console for debugging
+                if (result.detail) {
+                    console.error('Server error detail:', result.detail);
+                }
                 alert(result.message || 'Something went wrong. Please try again.');
             }
         } catch (error) {

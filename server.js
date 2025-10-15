@@ -5,61 +5,57 @@ const nodemailer = require('nodemailer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Middleware - JSON parsing enabled once
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the current directory
-app.use(express.static(__dirname));
-
-// Email Configuration
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
-
-// Contact Form API endpoint
-app.post('/api/contact', async (req, res) => {
-  const { name, email, phone, service, message } = req.body;
-
-  // Validation
-  if (!name || !email || !service) {
-    return res.status(400).json({ 
-      success: false, 
-      error: 'Please fill in all required fields.' 
-    });
-  }
-
-  // Email content
-  const mailOptions = {
-    from: `"Momentum Website" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_TO || process.env.EMAIL_USER,
-    subject: `New Contact Form Submission - ${service}`,
-    html: `
-      <h2>New Contact Form Submission</h2>
-      <p><strong>Name:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-      <p><strong>Service Interested In:</strong> ${service}</p>
-      <p><strong>Message:</strong></p>
-      <p>${message || 'No message provided'}</p>
-      <hr>
-      <p><small>Submitted from Momentum Digital website</small></p>
-    `,
-    replyTo: email
-  };
-
+// Contact Form API endpoint - BEFORE static files
+app.post("/api/contact", async (req, res) => {
   try {
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Email sent successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to send email" });
+    const { name, email, phone, service, message } = req.body || {};
+
+    // Basic validation
+    if (!name || !email || !message) {
+      return res.status(400).json({ ok: false, message: "Missing required fields (name, email, message)." });
+    }
+
+    // Env guardrails
+    const { EMAIL_USER, EMAIL_PASSWORD, EMAIL_TO } = process.env;
+    if (!EMAIL_USER || !EMAIL_PASSWORD) {
+      console.error("Missing EMAIL_USER or EMAIL_PASSWORD env vars");
+      return res.status(500).json({ ok: false, message: "Email not configured on server." });
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: EMAIL_USER, pass: EMAIL_PASSWORD },
+    });
+
+    // Optional connectivity check
+    await transporter.verify();
+
+    await transporter.sendMail({
+      from: `"Momentum Website" <${EMAIL_USER}>`,
+      to: EMAIL_TO || EMAIL_USER,
+      replyTo: email,
+      subject: `New website inquiry${service ? ` — ${service}` : ""}`,
+      html: `
+        <h3>New Lead</h3>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Phone:</b> ${phone || "-"}</p>
+        <p><b>Service:</b> ${service || "-"}</p>
+        <p><b>Message:</b><br>${(message || "").replace(/\n/g, "<br>")}</p>
+      `,
+    });
+
+    return res.status(200).json({ ok: true, message: "Email sent successfully" });
+  } catch (err) {
+    console.error("Contact API error:", err?.response || err);
+    const detail = err?.response?.toString?.() || err?.message || "Unknown error";
+    return res.status(500).json({ ok: false, message: "Failed to send email", detail });
   }
 });
 
@@ -77,6 +73,9 @@ app.get('/api/vapi-config', (req, res) => {
     assistantId: process.env.VAPI_ASSISTANT_ID
   });
 });
+
+// Serve static files AFTER API routes
+app.use(express.static(__dirname));
 
 // Handle all other routes by serving index.html (for SPA routing if needed)
 app.get('*', (req, res) => {
