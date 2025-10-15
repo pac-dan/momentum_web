@@ -1122,6 +1122,18 @@ p {
     }
 }
 
+/* Hide Vapi Default Widget - Force hide all default Vapi elements */
+[data-vapi-root],
+[id*="vapi"],
+[class*="vapi-btn"],
+iframe[src*="vapi"],
+div[style*="vapi"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 /* Custom Vapi Assistant Button */
 .vapi-assistant-button {
     position: fixed;
@@ -1133,7 +1145,7 @@ p {
     border-radius: 50px;
     border: none;
     cursor: pointer;
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 10px;
     font-size: 1rem;
@@ -1142,6 +1154,8 @@ p {
     box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
     transition: all 0.3s ease;
     z-index: 10000;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .vapi-assistant-button:hover {

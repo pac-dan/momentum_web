@@ -417,12 +417,20 @@
               return;
             }
             
-            // Initialize VAPI without default widget (buttonConfig: null disables it)
+            // Initialize VAPI without default widget
             vapiInstance = window.vapiSDK.run({
               apiKey: cfg.publicKey,
               assistant: cfg.assistantId,
               config: { 
-                buttonConfig: null  // This prevents the default button from showing
+                buttonConfig: {
+                  position: "bottom-right",
+                  offset: "0px",
+                  width: "0px",
+                  height: "0px",
+                  idle: { color: { background: "transparent" } },
+                  loading: { color: { background: "transparent" } },
+                  active: { color: { background: "transparent" } }
+                }
               }
             });
 
