@@ -11,51 +11,58 @@ app.use(express.urlencoded({ extended: true }));
 
 // Contact Form API endpoint - BEFORE static files
 app.post("/api/contact", async (req, res) => {
+  const { name, email, phone, service, message } = req.body || {};
+
+  // Validate required fields
+  if (!name || !email || !message) {
+    return res.status(400).json({ ok: false, message: "Missing required fields" });
+  }
+
+  // Check environment variables
+  const { EMAIL_USER, EMAIL_PASSWORD, EMAIL_TO } = process.env;
+  if (!EMAIL_USER || !EMAIL_PASSWORD) {
+    console.error("Missing EMAIL_USER or EMAIL_PASSWORD env vars");
+    return res.status(500).json({ ok: false, message: "Email not configured" });
+  }
+
+  // Create transporter
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user: EMAIL_USER, pass: EMAIL_PASSWORD },
+  });
+
+  // Verify SMTP connection
   try {
-    const { name, email, phone, service, message } = req.body || {};
-
-    // Basic validation
-    if (!name || !email || !message) {
-      return res.status(400).json({ ok: false, message: "Missing required fields (name, email, message)." });
-    }
-
-    // Env guardrails
-    const { EMAIL_USER, EMAIL_PASSWORD, EMAIL_TO } = process.env;
-    if (!EMAIL_USER || !EMAIL_PASSWORD) {
-      console.error("Missing EMAIL_USER or EMAIL_PASSWORD env vars");
-      return res.status(500).json({ ok: false, message: "Email not configured on server." });
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user: EMAIL_USER, pass: EMAIL_PASSWORD },
-    });
-
-    // Optional connectivity check
     await transporter.verify();
+  } catch (err) {
+    console.error("SMTP verify failed:", err.response || err);
+    return res.status(500).json({ 
+      ok: false, 
+      message: "SMTP verify failed", 
+      detail: err.response || err.message 
+    });
+  }
 
+  // Send email
+  try {
     await transporter.sendMail({
       from: `"Momentum Website" <${EMAIL_USER}>`,
       to: EMAIL_TO || EMAIL_USER,
       replyTo: email,
-      subject: `New website inquiry${service ? ` — ${service}` : ""}`,
-      html: `
-        <h3>New Lead</h3>
-        <p><b>Name:</b> ${name}</p>
-        <p><b>Email:</b> ${email}</p>
-        <p><b>Phone:</b> ${phone || "-"}</p>
-        <p><b>Service:</b> ${service || "-"}</p>
-        <p><b>Message:</b><br>${(message || "").replace(/\n/g, "<br>")}</p>
-      `,
+      subject: `New website inquiry${service ? ' — ' + service : ''}`,
+      html: `<p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Phone:</b> ${phone || '-'}</p><p><b>Service:</b> ${service || '-'}</p><p><b>Message:</b><br>${(message || '').replace(/\n/g, '<br>')}</p>`
     });
 
-    return res.status(200).json({ ok: true, message: "Email sent successfully" });
+    return res.status(200).json({ ok: true, message: "Email sent" });
   } catch (err) {
-    console.error("Contact API error:", err?.response || err);
-    const detail = err?.response?.toString?.() || err?.message || "Unknown error";
-    return res.status(500).json({ ok: false, message: "Failed to send email", detail });
+    console.error("Email send failed:", err.response || err);
+    return res.status(500).json({ 
+      ok: false, 
+      message: "Failed to send email", 
+      detail: err.response || err.message 
+    });
   }
 });
 

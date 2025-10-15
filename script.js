@@ -39,15 +39,20 @@ if (contactForm) {
     contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Get form data
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData);
+        // Build POST body from form fields
+        const name = document.getElementById('name')?.value?.trim() || '';
+        const email = document.getElementById('email')?.value?.trim() || '';
+        const phone = document.getElementById('phone')?.value?.trim() || '';
+        const service = document.getElementById('service')?.value || '';
+        const message = document.getElementById('message')?.value?.trim() || '';
         
-        // Simple validation
-        if (!data.name || !data.email || !data.service) {
-            alert('Please fill in all required fields.');
+        // Validate required fields before sending
+        if (!name || !email || !message) {
+            alert('Please fill in name, email, and message.');
             return;
         }
+        
+        const data = { name, email, phone, service, message };
         
         // Submit form
         const submitBtn = this.querySelector('button[type="submit"]');
