@@ -74,15 +74,60 @@ app.get('/api/vapi-config', (req, res) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Cache-Control', 'no-store');
   
+  // Check if VAPI environment variables are set
+  const publicKey = process.env.VAPI_PUBLIC_KEY;
+  const assistantId = process.env.VAPI_ASSISTANT_ID;
+  
+  console.log('VAPI Config Request - Public Key exists:', !!publicKey, 'Assistant ID exists:', !!assistantId);
+  
+  if (!publicKey || !assistantId) {
+    console.error('Missing VAPI environment variables:', {
+      hasPublicKey: !!publicKey,
+      hasAssistantId: !!assistantId
+    });
+    return res.status(500).json({
+      error: 'VAPI configuration not available',
+      hasPublicKey: !!publicKey,
+      hasAssistantId: !!assistantId
+    });
+  }
+  
   // Return VAPI configuration
   res.json({
-    publicKey: process.env.VAPI_PUBLIC_KEY,
-    assistantId: process.env.VAPI_ASSISTANT_ID
+    publicKey: publicKey,
+    assistantId: assistantId
   });
 });
 
+// Test endpoint to verify static file serving
+app.get('/api/test-media', (req, res) => {
+  const fs = require('fs');
+  const mediaDir = path.join(__dirname, 'media');
+  
+  try {
+    const files = fs.readdirSync(mediaDir);
+    res.json({
+      success: true,
+      mediaFiles: files,
+      mediaPath: mediaDir
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Serve static files AFTER API routes
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, {
+  setHeaders: (res, path) => {
+    // Set proper headers for media files
+    if (path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png') || path.endsWith('.gif')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache for images
+    }
+  }
+}));
 
 // Handle all other routes by serving index.html (for SPA routing if needed)
 app.get('*', (req, res) => {
